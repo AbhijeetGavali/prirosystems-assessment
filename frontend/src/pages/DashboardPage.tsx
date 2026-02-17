@@ -1,6 +1,6 @@
 import { Grid, Paper, Typography, Box, CircularProgress } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { useGetDashboardQuery, useGetPendingDocumentsQuery } from '../store/api/documentApi';
+import { useGetDashboardQuery } from '../store/api/documentApi';
 import { useAppSelector } from '../hooks/redux';
 import { UserRole } from '../types';
 
@@ -14,9 +14,6 @@ const STATUS_COLORS: Record<string, string> = {
 export const DashboardPage = () => {
   const { user } = useAppSelector((state) => state.auth);
   const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardQuery();
-  const { data: pendingData } = useGetPendingDocumentsQuery(undefined, {
-    skip: user?.role !== UserRole.APPROVER,
-  });
 
   if (dashboardLoading) {
     return (
@@ -39,7 +36,7 @@ export const DashboardPage = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Paper sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h4" color="primary" fontWeight={600}>
               {stats?.totalDocuments || 0}
@@ -48,7 +45,18 @@ export const DashboardPage = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h4" color="warning.main" fontWeight={600}>
+              {stats?.pendingCount || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {user?.role === UserRole.APPROVER ? 'Pending Approvals' : 'Pending'}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={2.4}>
           <Paper sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h4" color="success.main" fontWeight={600}>
               {stats?.approvedCount || 0}
@@ -57,7 +65,7 @@ export const DashboardPage = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Paper sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h4" color="error.main" fontWeight={600}>
               {stats?.rejectedCount || 0}
@@ -66,7 +74,7 @@ export const DashboardPage = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Paper sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h4" color="info.main" fontWeight={600}>
               {stats?.avgApprovalTimeHours.toFixed(1) || 0}
@@ -76,18 +84,7 @@ export const DashboardPage = () => {
           </Paper>
         </Grid>
 
-        {user?.role === UserRole.APPROVER && (
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" color="warning.main" fontWeight={600}>
-                {pendingData?.data?.length || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">Pending Tasks</Typography>
-            </Paper>
-          </Grid>
-        )}
-
-        <Grid item xs={12} md={user?.role === UserRole.APPROVER ? 6 : 12}>
+        <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Document Status Distribution

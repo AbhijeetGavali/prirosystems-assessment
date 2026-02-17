@@ -174,6 +174,7 @@ export class DocumentRepository {
     totalDocuments: number;
     approvedCount: number;
     rejectedCount: number;
+    pendingCount: number;
     avgApprovalTime: number;
     statusDistribution: Array<{ _id: string; count: number }>;
   }> {
@@ -185,10 +186,22 @@ export class DocumentRepository {
       roleFilter['stages.approverId'] = userId;
     }
     
-    const [totalCount, approvedCount, rejectedCount, avgResult, statusDistribution] = await Promise.all([
+    const [totalCount, approvedCount, rejectedCount, pendingCount, avgResult, statusDistribution] = await Promise.all([
       Document.countDocuments(roleFilter),
       Document.countDocuments({ ...roleFilter, status: DocumentStatus.APPROVED }),
       Document.countDocuments({ ...roleFilter, status: DocumentStatus.REJECTED }),
+      userRole === 'Approver' 
+        ? Document.countDocuments({
+            'stages.approverId': userId,
+            status: { $in: [DocumentStatus.PENDING, DocumentStatus.IN_PROGRESS] },
+            $expr: {
+              $eq: [
+                { $arrayElemAt: ["$stages.approverId", { $subtract: ["$currentStageNumber", 1] }] },
+                userId,
+              ],
+            },
+          })
+        : Document.countDocuments({ ...roleFilter, status: { $in: [DocumentStatus.PENDING, DocumentStatus.IN_PROGRESS] } }),
       Document.aggregate([
         {
           $match: {
@@ -224,6 +237,7 @@ export class DocumentRepository {
       totalDocuments: totalCount,
       approvedCount,
       rejectedCount,
+      pendingCount,
       avgApprovalTime: avgResult[0]?.avgApprovalTime || 0,
       statusDistribution,
     };

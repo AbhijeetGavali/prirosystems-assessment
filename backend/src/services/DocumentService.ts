@@ -182,6 +182,7 @@ export class DocumentService {
     totalDocuments: number;
     approvedCount: number;
     rejectedCount: number;
+    pendingCount: number;
     avgApprovalTimeMs: number;
     avgApprovalTimeHours: number;
     statusDistribution: Array<{ status: string; count: number }>;
@@ -191,6 +192,7 @@ export class DocumentService {
       totalDocuments: stats.totalDocuments,
       approvedCount: stats.approvedCount,
       rejectedCount: stats.rejectedCount,
+      pendingCount: stats.pendingCount,
       avgApprovalTimeMs: stats.avgApprovalTime,
       avgApprovalTimeHours: stats.avgApprovalTime / (1000 * 60 * 60),
       statusDistribution: stats.statusDistribution.map((s) => ({

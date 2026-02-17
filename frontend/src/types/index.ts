@@ -90,6 +90,7 @@ export interface DashboardStats {
   totalDocuments: number;
   approvedCount: number;
   rejectedCount: number;
+  pendingCount: number;
   avgApprovalTimeMs: number;
   avgApprovalTimeHours: number;
   statusDistribution: Array<{ status: string; count: number }>;
