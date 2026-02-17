@@ -91,6 +91,8 @@ After running the seed script:
 
 ## 📚 API Documentation
 
+Interactive API documentation available at: **http://localhost:8080/api-docs**
+
 ### Authentication Endpoints
 
 #### Register
@@ -237,8 +239,10 @@ Authorization: Bearer {access_token}
 4. **Rate Limiting:** 100 requests per 15 minutes per IP
 5. **Helmet:** Security headers
 6. **CORS:** Configured for frontend origin
-7. **Atomic Operations:** MongoDB atomic operators prevent race conditions
-8. **Structured Logging:** Winston logger for production monitoring
+7. **Role-Based Access Control:** Protected routes with RoleGuard
+8. **Atomic Operations:** MongoDB atomic operators prevent race conditions
+9. **Connection Pooling:** Optimized database connections (10 max, 2 min)
+10. **Structured Logging:** Winston logger for production monitoring
 
 ## 🎯 Core Features
 
@@ -283,9 +287,11 @@ Every action is logged with:
 
 ### Dashboard Analytics
 
+- Total documents count
+- Pending approvals per user (role-aware)
+- Approved vs Rejected count
 - Average approval time (hours)
 - Status distribution (pie chart)
-- Pending tasks for approvers
 
 ## 📁 Project Structure
 
@@ -293,6 +299,9 @@ Every action is logged with:
 ASSESSMENT/
 ├── backend/
 │   ├── src/
+│   │   ├── __tests__/       # Test files
+│   │   │   ├── integration/ # API endpoint tests
+│   │   │   └── unit/        # Service & logic tests
 │   │   ├── config/          # Configuration files
 │   │   ├── models/          # Mongoose models
 │   │   ├── types/           # TypeScript interfaces
@@ -305,12 +314,24 @@ ASSESSMENT/
 │   │   ├── scripts/         # Utility scripts
 │   │   └── server.ts        # Entry point
 │   ├── Dockerfile
+│   ├── jest.config.ts
 │   ├── package.json
 │   └── tsconfig.json
 ├── frontend/
 │   ├── src/
 │   │   ├── components/      # React components
+│   │   │   ├── Layout.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   ├── RoleGuard.tsx
+│   │   │   └── DocumentStepper.tsx
 │   │   ├── pages/           # Page components
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── RegisterPage.tsx
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── DocumentsPage.tsx
+│   │   │   ├── DocumentDetailPage.tsx
+│   │   │   ├── PendingApprovalsPage.tsx
+│   │   │   └── UnauthorizedPage.tsx
 │   │   ├── store/           # Redux store
 │   │   │   ├── api/         # RTK Query APIs
 │   │   │   └── slices/      # Redux slices
@@ -323,7 +344,10 @@ ASSESSMENT/
 │   ├── nginx.conf
 │   ├── package.json
 │   └── tsconfig.json
-└── docker-compose.yml
+├── docker-compose.yml
+├── README.md
+├── TEST_GUIDE.md
+└── OPTIMIZATION_GUIDE.md
 ```
 
 ## 🔄 Workflow States
@@ -348,6 +372,7 @@ ASSESSMENT/
 - Persistent login using localStorage
 - Axios interceptors for automatic token refresh
 - 401 handling with redirect to login
+- Role-based route protection with automatic redirection
 
 ### Document Management
 
@@ -355,12 +380,18 @@ ASSESSMENT/
 - View all documents with pagination and filtering
 - Visual progress tracking with MUI Stepper
 - Approve/Reject with comments
+- Real-time status updates
 
 ### Dashboard
 
-- Average approval time chart
+- 5 key metrics for all user roles:
+  - Total documents
+  - Pending approvals (role-aware)
+  - Approved count
+  - Rejected count
+  - Average approval time
 - Status distribution pie chart
-- Pending tasks count for approvers
+- Role-specific data filtering
 
 ### UI Components
 
@@ -368,6 +399,7 @@ ASSESSMENT/
 - Tailwind CSS for utility styling
 - React-Toastify for notifications
 - Recharts for data visualization
+- Responsive design (mobile-friendly)
 
 ## 🧪 Testing the System
 
@@ -397,14 +429,29 @@ ASSESSMENT/
 ### Backend Scripts
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build TypeScript
-npm start        # Start production server
-npm run seed     # Seed database
-npm test         # Run tests
+npm run dev           # Start development server
+npm run build         # Build TypeScript
+npm start             # Start production server
+npm run seed          # Seed database
+npm test              # Run tests
 npm run test:watch    # Run tests in watch mode
 npm run test:coverage # Run tests with coverage
 ```
+
+### Test Coverage
+
+```
+Test Suites: 7 passed, 7 total
+Tests:       36 passed, 36 total
+Coverage:    56% overall
+```
+
+**Key Coverage:**
+- AuthService: 95%
+- Middlewares: 92%
+- Models: 83%
+- DocumentService: 50%
+
 
 ### Frontend Scripts
 
@@ -483,6 +530,25 @@ docker-compose down -v
 docker system prune -a
 docker-compose up --build
 ```
+
+## ⚡ Performance Optimizations
+
+### Database
+- ✅ Connection pooling (10 max, 2 min connections)
+- ✅ 4 strategic indexes on Document model
+- ✅ `.lean()` queries for read-only operations
+- ✅ Batch user validation (N queries → 1 query)
+
+### Backend
+- ✅ Atomic operations for concurrency control
+- ✅ `Promise.all()` for parallel operations
+- ✅ Field selection with `.select()` to reduce payload
+
+### Frontend
+- ✅ RTK Query caching
+- ✅ Responsive design with Material-UI Grid
+- ✅ Optimistic UI updates
+
 
 ## 📄 License
 
