@@ -39,7 +39,7 @@ describe('DocumentService', () => {
         save: jest.fn().mockResolvedValue(true),
       };
 
-      mockUserRepo.findById.mockResolvedValue(mockApprover as any);
+      mockUserRepo.findByIds.mockResolvedValue([mockApprover] as any);
       mockDocRepo.create.mockResolvedValue(mockDocument as any);
       mockDocRepo.findById.mockResolvedValue(mockDocument as any);
 
@@ -57,7 +57,7 @@ describe('DocumentService', () => {
 
     it('should throw error for invalid approver', async () => {
       const validObjectId = new Types.ObjectId().toString();
-      mockUserRepo.findById.mockResolvedValue(null);
+      mockUserRepo.findByIds.mockResolvedValue([]);
 
       await expect(
         documentService.createDocument({
@@ -67,7 +67,7 @@ describe('DocumentService', () => {
           submitterId: new Types.ObjectId(),
           approverIds: [validObjectId],
         })
-      ).rejects.toThrow('Invalid approver ID');
+      ).rejects.toThrow('One or more invalid approver IDs');
     });
   });
 

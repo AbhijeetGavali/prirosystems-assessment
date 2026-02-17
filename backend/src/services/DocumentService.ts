@@ -14,16 +14,13 @@ export class DocumentService {
     submitterId: Types.ObjectId;
     approverIds: string[];
   }): Promise<IDocument> {
-    // Validate approvers exist and have correct role
-    const approvers = await Promise.all(
-      data.approverIds.map(async (id) => {
-        const approver = await this.userRepo.findById(new Types.ObjectId(id));
-        if (!approver || approver.role !== UserRole.APPROVER) {
-          throw new Error(`Invalid approver ID: ${id}`);
-        }
-        return approver;
-      })
-    );
+    // Validate approvers exist and have correct role (optimized batch query)
+    const approverObjectIds = data.approverIds.map(id => new Types.ObjectId(id));
+    const approvers = await this.userRepo.findByIds(approverObjectIds);
+
+    if (approvers.length !== data.approverIds.length) {
+      throw new Error('One or more invalid approver IDs');
+    }
 
     const stages = approvers.map((approver, index) => ({
       stageNumber: index + 1,

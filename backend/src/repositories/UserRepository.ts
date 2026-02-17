@@ -20,6 +20,13 @@ export class UserRepository {
     return await User.find({ role }).select("-password").lean<IUser[]>();
   }
 
+  async findByIds(ids: Types.ObjectId[]): Promise<IUser[]> {
+    return await User.find({ 
+      _id: { $in: ids },
+      role: UserRole.APPROVER 
+    }).select('-password').lean<IUser[]>();
+  }
+
   async findAll(): Promise<IUser[]> {
     return await User.find().select("-password").lean<IUser[]>();
   }

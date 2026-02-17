@@ -40,5 +40,6 @@ const documentSchema = new Schema<IDocument>(
 documentSchema.index({ status: 1, currentStageNumber: 1 });
 documentSchema.index({ submitterId: 1 });
 documentSchema.index({ 'stages.approverId': 1 });
+documentSchema.index({ createdAt: -1 });
 
 export const Document = mongoose.model<IDocument>('Document', documentSchema);
