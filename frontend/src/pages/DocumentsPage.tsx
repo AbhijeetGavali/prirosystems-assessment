@@ -20,20 +20,91 @@ import {
   Drawer,
   TextField,
   IconButton,
-  Autocomplete,
   Stack,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  Autocomplete,
 } from '@mui/material';
-import { Add as AddIcon, Close as CloseIcon, Visibility as ViewIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Close as CloseIcon,
+  Visibility as ViewIcon,
+  DragIndicator as DragIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useGetDocumentsQuery, useCreateDocumentMutation } from '../store/api/documentApi';
 import { useGetApproversQuery } from '../store/api/userApi';
 import { useAppSelector } from '../hooks/redux';
 import { UserRole, DocumentStatus } from '../types';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '../utils/errorHandler';
+
+interface SortableApproverProps {
+  approver: { id: string; name: string; email: string };
+  index: number;
+  onRemove: () => void;
+}
+
+const SortableApprover = ({ approver, index, onRemove }: SortableApproverProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: approver.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <ListItem
+      ref={setNodeRef}
+      style={style}
+      sx={{
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1,
+        mb: 1,
+        bgcolor: 'background.paper',
+        cursor: 'grab',
+        '&:active': { cursor: 'grabbing' },
+      }}
+      secondaryAction={
+        <IconButton edge="end" size="small" onClick={onRemove}>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      }
+    >
+      <Box {...attributes} {...listeners} sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+        <DragIcon sx={{ color: 'text.secondary' }} />
+      </Box>
+      <Chip label={index + 1} size="small" sx={{ mr: 1, minWidth: 32 }} />
+      <ListItemText primary={approver.name} secondary={approver.email} />
+    </ListItem>
+  );
+};
 
 export const DocumentsPage = () => {
   const navigate = useNavigate();
@@ -54,12 +125,33 @@ export const DocumentsPage = () => {
     approverIds: [] as string[],
   });
 
+  const [selectedApprovers, setSelectedApprovers] = useState<Array<{ id: string; name: string; email: string }>>([]);
   const [errors, setErrors] = useState({
     approverIds: false,
   });
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setSelectedApprovers((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        setFormData({ ...formData, approverIds: newOrder.map((a) => a.id) });
+        return newOrder;
+      });
+    }
+  };
+
   const isFormDirty = () => {
-    return formData.title || formData.description || formData.fileLink || formData.approverIds.length > 0;
+    return formData.title || formData.description || formData.fileLink || selectedApprovers.length > 0;
   };
 
   const handleDrawerClose = () => {
@@ -73,6 +165,7 @@ export const DocumentsPage = () => {
 
   const resetForm = () => {
     setFormData({ title: '', description: '', fileLink: '', approverIds: [] });
+    setSelectedApprovers([]);
     setErrors({ approverIds: false });
   };
 
@@ -153,6 +246,7 @@ export const DocumentsPage = () => {
               <TableCell><strong>Submitter</strong></TableCell>
               <TableCell><strong>Status</strong></TableCell>
               <TableCell><strong>Stage</strong></TableCell>
+              <TableCell><strong>Current Approver</strong></TableCell>
               <TableCell><strong>Created</strong></TableCell>
               <TableCell align="right"><strong>Actions</strong></TableCell>
             </TableRow>
@@ -160,35 +254,47 @@ export const DocumentsPage = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">Loading...</TableCell>
+                <TableCell colSpan={7} align="center">Loading...</TableCell>
               </TableRow>
             ) : documents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">No documents found</TableCell>
+                <TableCell colSpan={7} align="center">No documents found</TableCell>
               </TableRow>
             ) : (
-              documents.map((doc) => (
-                <TableRow key={doc._id} hover>
-                  <TableCell>{doc.title}</TableCell>
-                  <TableCell>{doc.submitterId.name}</TableCell>
-                  <TableCell>
-                    <Chip label={doc.status} color={getStatusColor(doc.status)} size="small" />
-                  </TableCell>
-                  <TableCell>
-                    {doc.status === DocumentStatus.APPROVED
-                      ? `${doc.stages.length}/${doc.stages.length}`
-                      : doc.status === DocumentStatus.REJECTED
-                      ? `${doc.currentStageNumber}/${doc.stages.length} (Rejected)`
-                      : `${Math.min(doc.currentStageNumber, doc.stages.length)}/${doc.stages.length}`}
-                  </TableCell>
-                  <TableCell>{new Date(doc.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell align="right">
-                    <IconButton size="small" color="primary" onClick={() => navigate(`/documents/${doc._id}`)}>
+              documents.map((doc) => {
+                const currentStage = doc.stages[doc.currentStageNumber - 1];
+                const currentApprover = currentStage?.approverId;
+                
+                return (
+                  <TableRow key={doc._id} hover>
+                    <TableCell>{doc.title}</TableCell>
+                    <TableCell>{doc.submitterId.name}</TableCell>
+                    <TableCell>
+                      <Chip label={doc.status} color={getStatusColor(doc.status)} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      {doc.status === DocumentStatus.APPROVED
+                        ? `${doc.stages.length}/${doc.stages.length}`
+                        : doc.status === DocumentStatus.REJECTED
+                        ? `${doc.currentStageNumber}/${doc.stages.length} (Rejected)`
+                        : `${Math.min(doc.currentStageNumber, doc.stages.length)}/${doc.stages.length}`}
+                    </TableCell>
+                    <TableCell>
+                      {doc.status === DocumentStatus.APPROVED || doc.status === DocumentStatus.REJECTED
+                        ? '-'
+                        : currentApprover
+                        ? `${currentApprover.name}`
+                        : '-'}
+                    </TableCell>
+                    <TableCell>{new Date(doc.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" color="primary" onClick={() => navigate(`/documents/${doc._id}`)}>
                       <ViewIcon />
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -234,25 +340,62 @@ export const DocumentsPage = () => {
                 required
               />
               <Autocomplete
-                multiple
-                options={approvers}
+                options={approvers.filter((a) => !selectedApprovers.find((s) => s.id === a.id))}
                 getOptionLabel={(option) => `${option.name} (${option.email})`}
-                value={approvers.filter((a) => formData.approverIds.includes(a.id))}
+                value={null}
+                disabled={selectedApprovers.length >= 10}
                 onChange={(_, newValue) => {
-                  setFormData({ ...formData, approverIds: newValue.map((v) => v.id) });
-                  if (newValue.length > 0) {
+                  if (newValue && selectedApprovers.length < 10) {
+                    const newApprovers = [...selectedApprovers, newValue];
+                    setSelectedApprovers(newApprovers);
+                    setFormData({ ...formData, approverIds: newApprovers.map((a) => a.id) });
                     setErrors({ ...errors, approverIds: false });
                   }
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Approvers (in order)"
-                    error={errors.approverIds}
-                    helperText={errors.approverIds ? 'At least one approver is required' : ''}
+                    label="Add Approver"
+                    placeholder={selectedApprovers.length >= 10 ? 'Maximum 10 approvers reached' : 'Search and select approver'}
+                    helperText={`${selectedApprovers.length}/10 approvers`}
                   />
                 )}
+                blurOnSelect
+                clearOnBlur
+                openOnFocus
               />
+
+              {selectedApprovers.length > 0 && (
+                <Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Approval Order (Drag to reorder)
+                  </Typography>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={selectedApprovers.map((a) => a.id)} strategy={verticalListSortingStrategy}>
+                      <List sx={{ p: 0 }}>
+                        {selectedApprovers.map((approver, index) => (
+                          <SortableApprover
+                            key={approver.id}
+                            approver={approver}
+                            index={index}
+                            onRemove={() => {
+                              const newApprovers = selectedApprovers.filter((a) => a.id !== approver.id);
+                              setSelectedApprovers(newApprovers);
+                              setFormData({ ...formData, approverIds: newApprovers.map((a) => a.id) });
+                            }}
+                          />
+                        ))}
+                      </List>
+                    </SortableContext>
+                  </DndContext>
+                </Box>
+              )}
+
+              {errors.approverIds && (
+                <Typography variant="caption" color="error">
+                  At least one approver is required
+                </Typography>
+              )}
               <Button type="submit" variant="contained" size="large" disabled={creating} fullWidth>
                 {creating ? 'Creating...' : 'Create Document'}
               </Button>
