@@ -40,17 +40,29 @@ export class DocumentRepository {
     filter: Record<string, unknown>,
     page: number,
     limit: number,
+    userId?: Types.ObjectId,
+    userRole?: string,
   ): Promise<{ documents: IDocument[]; total: number }> {
     const skip = (page - 1) * limit;
+    
+    // Role-based filtering
+    const query: any = { ...filter };
+    if (userRole === 'Submitter') {
+      query.submitterId = userId;
+    } else if (userRole === 'Approver') {
+      query['stages.approverId'] = userId;
+    }
+    // Admin can see all documents (no additional filter)
+    
     const [documents, total] = await Promise.all([
-      Document.find(filter)
+      Document.find(query)
         .populate("submitterId", "name email")
         .populate("stages.approverId", "name email")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean<IDocument[]>(),
-      Document.countDocuments(filter),
+      Document.countDocuments(query),
     ]);
     return { documents, total };
   }
@@ -60,11 +72,16 @@ export class DocumentRepository {
   ): Promise<IDocument[]> {
     return await Document.find({
       status: { $in: [DocumentStatus.PENDING, DocumentStatus.IN_PROGRESS] },
-      "stages.approverId": approverId,
-      "stages.status": StageStatus.PENDING,
+      $expr: {
+        $eq: [
+          { $arrayElemAt: ["$stages.approverId", { $subtract: ["$currentStageNumber", 1] }] },
+          approverId,
+        ],
+      },
     })
       .populate("submitterId", "name email")
       .populate("stages.approverId", "name email")
+      .populate("auditTrail.actorId", "name email")
       .lean<IDocument[]>();
   }
 
@@ -150,20 +167,32 @@ export class DocumentRepository {
       .populate("auditTrail.actorId", "name email");
   }
 
-  async getDashboardStats(): Promise<{
+  async getDashboardStats(
+    userId?: Types.ObjectId,
+    userRole?: string,
+  ): Promise<{
     totalDocuments: number;
     approvedCount: number;
     rejectedCount: number;
     avgApprovalTime: number;
     statusDistribution: Array<{ _id: string; count: number }>;
   }> {
+    // Role-based filter
+    const roleFilter: any = {};
+    if (userRole === 'Submitter') {
+      roleFilter.submitterId = userId;
+    } else if (userRole === 'Approver') {
+      roleFilter['stages.approverId'] = userId;
+    }
+    
     const [totalCount, approvedCount, rejectedCount, avgResult, statusDistribution] = await Promise.all([
-      Document.countDocuments(),
-      Document.countDocuments({ status: DocumentStatus.APPROVED }),
-      Document.countDocuments({ status: DocumentStatus.REJECTED }),
+      Document.countDocuments(roleFilter),
+      Document.countDocuments({ ...roleFilter, status: DocumentStatus.APPROVED }),
+      Document.countDocuments({ ...roleFilter, status: DocumentStatus.REJECTED }),
       Document.aggregate([
         {
           $match: {
+            ...roleFilter,
             status: DocumentStatus.APPROVED,
             completedAt: { $exists: true },
           },
@@ -181,6 +210,7 @@ export class DocumentRepository {
         },
       ]),
       Document.aggregate([
+        { $match: roleFilter },
         {
           $group: {
             _id: "$status",

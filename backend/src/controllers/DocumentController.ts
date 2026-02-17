@@ -40,7 +40,13 @@ export class DocumentController {
       const filter: { status?: DocumentStatus } = {};
       if (status) filter.status = status;
 
-      const result = await this.docService.getDocuments(filter, page, limit);
+      const result = await this.docService.getDocuments(
+        filter,
+        page,
+        limit,
+        req.user!.userId,
+        req.user!.role
+      );
       res.status(200).json({
         success: true,
         data: result,
@@ -135,7 +141,7 @@ export class DocumentController {
 
   getDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const stats = await this.docService.getDashboardStats();
+      const stats = await this.docService.getDashboardStats(req.user!.userId, req.user!.role);
       res.status(200).json({
         success: true,
         data: stats,

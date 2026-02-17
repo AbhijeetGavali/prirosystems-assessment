@@ -17,6 +17,8 @@ import { useLoginMutation } from '../store/api/authApi';
 import { useAppDispatch } from '../hooks/redux';
 import { setCredentials } from '../store/slices/authSlice';
 
+import { getErrorMessage } from '../utils/errorHandler';
+
 export const LoginPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -35,7 +37,7 @@ export const LoginPage = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
-      setError(err.data?.message || 'Login failed');
+      setError(getErrorMessage(err));
     }
   };
 

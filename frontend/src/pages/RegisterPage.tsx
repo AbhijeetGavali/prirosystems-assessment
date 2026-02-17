@@ -17,6 +17,8 @@ import { Visibility, VisibilityOff, PersonAdd as PersonAddIcon } from '@mui/icon
 import { useRegisterMutation } from '../store/api/authApi';
 import { UserRole } from '../types';
 
+import { getErrorMessage } from '../utils/errorHandler';
+
 export const RegisterPage = () => {
   const navigate = useNavigate();
   const [register, { isLoading }] = useRegisterMutation();
@@ -38,7 +40,7 @@ export const RegisterPage = () => {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
-      setError(err.data?.message || 'Registration failed');
+      setError(getErrorMessage(err));
     }
   };
 

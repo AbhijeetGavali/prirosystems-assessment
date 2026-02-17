@@ -29,6 +29,7 @@ import { useGetApproversQuery } from '../store/api/userApi';
 import { useAppSelector } from '../hooks/redux';
 import { UserRole, DocumentStatus } from '../types';
 import { toast } from 'react-toastify';
+import { getErrorMessage } from '../utils/errorHandler';
 
 export const DocumentsPage = () => {
   const navigate = useNavigate();
@@ -50,13 +51,19 @@ export const DocumentsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.approverIds.length === 0) {
+      toast.error('Please select at least one approver');
+      return;
+    }
+    
     try {
       await createDocument(formData).unwrap();
       toast.success('Document created successfully!');
       setDrawerOpen(false);
       setFormData({ title: '', description: '', fileLink: '', approverIds: [] });
     } catch (err: any) {
-      toast.error(err.data?.message || 'Failed to create document');
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -196,7 +203,14 @@ export const DocumentsPage = () => {
                 getOptionLabel={(option) => `${option.name} (${option.email})`}
                 value={approvers.filter((a) => formData.approverIds.includes(a.id))}
                 onChange={(_, newValue) => setFormData({ ...formData, approverIds: newValue.map((v) => v.id) })}
-                renderInput={(params) => <TextField {...params} label="Approvers (in order)" required />}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Approvers (in order)"
+                    required={formData.approverIds.length === 0}
+                    error={formData.approverIds.length === 0}
+                  />
+                )}
               />
               <Button type="submit" variant="contained" size="large" disabled={creating} fullWidth>
                 {creating ? 'Creating...' : 'Create Document'}

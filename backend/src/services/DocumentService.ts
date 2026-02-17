@@ -55,9 +55,11 @@ export class DocumentService {
   async getDocuments(
     filter: { status?: DocumentStatus },
     page: number,
-    limit: number
+    limit: number,
+    userId: Types.ObjectId,
+    userRole: string,
   ): Promise<{ documents: IDocument[]; total: number; page: number; totalPages: number }> {
-    const { documents, total } = await this.docRepo.findPaginated(filter, page, limit);
+    const { documents, total } = await this.docRepo.findPaginated(filter, page, limit, userId, userRole);
     return {
       documents,
       total,
@@ -173,7 +175,10 @@ export class DocumentService {
     return updatedDoc;
   }
 
-  async getDashboardStats(): Promise<{
+  async getDashboardStats(
+    userId: Types.ObjectId,
+    userRole: string,
+  ): Promise<{
     totalDocuments: number;
     approvedCount: number;
     rejectedCount: number;
@@ -181,7 +186,7 @@ export class DocumentService {
     avgApprovalTimeHours: number;
     statusDistribution: Array<{ status: string; count: number }>;
   }> {
-    const stats = await this.docRepo.getDashboardStats();
+    const stats = await this.docRepo.getDashboardStats(userId, userRole);
     return {
       totalDocuments: stats.totalDocuments,
       approvedCount: stats.approvedCount,
