@@ -1,10 +1,8 @@
-import { Container, Grid, Paper, Typography, Box, CircularProgress } from '@mui/material';
+import { Grid, Paper, Typography, Box, CircularProgress } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { useGetDashboardQuery } from '../store/api/documentApi';
-import { useGetPendingDocumentsQuery } from '../store/api/documentApi';
+import { useGetDashboardQuery, useGetPendingDocumentsQuery } from '../store/api/documentApi';
 import { useAppSelector } from '../hooks/redux';
 import { UserRole } from '../types';
-import { Navbar } from '../components/Navbar';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -17,7 +15,7 @@ export const DashboardPage = () => {
 
   if (dashboardLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
         <CircularProgress />
       </Box>
     );
@@ -30,117 +28,88 @@ export const DashboardPage = () => {
   }));
 
   return (
-    <>
-      <Navbar />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Dashboard
-        </Typography>
+    <Box>
+      <Typography variant="h5" fontWeight={600} sx={{ mb: 3 }}>
+        Dashboard
+      </Typography>
 
-        <Grid container spacing={3}>
-          {/* Total Documents */}
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
-              <Typography variant="h6" gutterBottom>
-                Total Documents
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                <Typography variant="h3" color="primary">
-                  {stats?.totalDocuments || 0}
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-
-          {/* Approved Count */}
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
-              <Typography variant="h6" gutterBottom>
-                Approved
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                <Typography variant="h3" color="success.main">
-                  {stats?.approvedCount || 0}
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-
-          {/* Rejected Count */}
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
-              <Typography variant="h6" gutterBottom>
-                Rejected
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                <Typography variant="h3" color="error.main">
-                  {stats?.rejectedCount || 0}
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-
-          {/* Average Approval Time */}
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
-              <Typography variant="h6" gutterBottom>
-                Avg Approval Time
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                <Typography variant="h3" color="info.main">
-                  {stats?.avgApprovalTimeHours.toFixed(1) || 0}
-                  <Typography component="span" variant="h6"> hrs</Typography>
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-
-          {/* Pending Tasks for Approver */}
-          {user?.role === UserRole.APPROVER && (
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
-                <Typography variant="h6" gutterBottom>
-                  Pending Tasks
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                  <Typography variant="h3" color="warning.main">
-                    {pendingData?.data?.length || 0}
-                  </Typography>
-                </Box>
-              </Paper>
-            </Grid>
-          )}
-
-          {/* Status Distribution Chart */}
-          <Grid item xs={12} md={user?.role === UserRole.APPROVER ? 6 : 12}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Document Status Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {chartData?.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h4" color="primary" fontWeight={600}>
+              {stats?.totalDocuments || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">Total Documents</Typography>
+          </Paper>
         </Grid>
-      </Container>
-    </>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h4" color="success.main" fontWeight={600}>
+              {stats?.approvedCount || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">Approved</Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h4" color="error.main" fontWeight={600}>
+              {stats?.rejectedCount || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">Rejected</Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="h4" color="info.main" fontWeight={600}>
+              {stats?.avgApprovalTimeHours.toFixed(1) || 0}
+              <Typography component="span" variant="body1"> hrs</Typography>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">Avg Approval Time</Typography>
+          </Paper>
+        </Grid>
+
+        {user?.role === UserRole.APPROVER && (
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" color="warning.main" fontWeight={600}>
+                {pendingData?.data?.length || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">Pending Tasks</Typography>
+            </Paper>
+          </Grid>
+        )}
+
+        <Grid item xs={12} md={user?.role === UserRole.APPROVER ? 6 : 12}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom fontWeight={600}>
+              Document Status Distribution
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {chartData?.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };

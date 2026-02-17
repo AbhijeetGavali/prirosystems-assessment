@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container,
   Paper,
   Typography,
   Box,
@@ -29,7 +28,6 @@ import {
 import { useAppSelector } from '../hooks/redux';
 import { DocumentStepper } from '../components/DocumentStepper';
 import { toast } from 'react-toastify';
-import { Navbar } from '../components/Navbar';
 import { DocumentStatus, UserRole } from '../types';
 
 export const DocumentDetailPage = () => {
@@ -83,14 +81,9 @@ export const DocumentDetailPage = () => {
 
   if (!document) {
     return (
-      <>
-        <Navbar />
-        <Container>
-          <Typography variant="h5" sx={{ mt: 4 }}>
-            Document not found
-          </Typography>
-        </Container>
-      </>
+      <Box>
+        <Typography variant="h5">Document not found</Typography>
+      </Box>
     );
   }
 
@@ -108,18 +101,16 @@ export const DocumentDetailPage = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Button variant="outlined" onClick={() => navigate('/documents')} sx={{ mb: 2 }}>
-          Back to Documents
-        </Button>
+    <Box>
+      <Button variant="outlined" onClick={() => navigate('/documents')} sx={{ mb: 2 }}>
+        ← Back to Documents
+      </Button>
 
-        <Paper sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4">{document.title}</Typography>
-            <Chip label={document.status} color={getStatusColor(document.status)} />
-          </Box>
+      <Paper sx={{ p: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" fontWeight={600}>{document.title}</Typography>
+          <Chip label={document.status} color={getStatusColor(document.status)} />
+        </Box>
 
           <Typography variant="body1" paragraph>
             <strong>Description:</strong> {document.description}
@@ -203,28 +194,27 @@ export const DocumentDetailPage = () => {
             </Table>
           </TableContainer>
         </Paper>
-      </Container>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>{dialogType === 'approve' ? 'Approve Document' : 'Reject Document'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Comment (optional)"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            multiline
-            rows={3}
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleAction} variant="contained" color={dialogType === 'approve' ? 'success' : 'error'}>
-            {dialogType === 'approve' ? 'Approve' : 'Reject'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
-};
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>{dialogType === 'approve' ? 'Approve Document' : 'Reject Document'}</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              label="Comment (optional)"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              multiline
+              rows={3}
+              margin="normal"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button onClick={handleAction} variant="contained" color={dialogType === 'approve' ? 'success' : 'error'}>
+              {dialogType === 'approve' ? 'Approve' : 'Reject'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
