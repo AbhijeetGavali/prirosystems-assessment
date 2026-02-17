@@ -68,7 +68,9 @@ export const DocumentDetailPage = () => {
     if (document.status !== DocumentStatus.PENDING && document.status !== DocumentStatus.IN_PROGRESS) return false;
 
     const currentStage = document.stages.find((s) => s.stageNumber === document.currentStageNumber);
-    return currentStage?.approverId._id === user.id;
+    if (!currentStage) return false; // Stage not found (edge case)
+    
+    return currentStage.approverId._id === user.id && currentStage.status === 'Pending';
   };
 
   if (isLoading) {

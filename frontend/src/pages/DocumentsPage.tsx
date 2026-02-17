@@ -115,7 +115,9 @@ export const DocumentsPage = () => {
                     <Chip label={doc.status} color={getStatusColor(doc.status)} size="small" />
                   </TableCell>
                   <TableCell>
-                    {doc.currentStageNumber} / {doc.stages.length}
+                    {doc.status === DocumentStatus.APPROVED || doc.status === DocumentStatus.REJECTED
+                      ? `${doc.stages.length} / ${doc.stages.length}`
+                      : `${Math.min(doc.currentStageNumber, doc.stages.length)} / ${doc.stages.length}`}
                   </TableCell>
                   <TableCell>{new Date(doc.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>

@@ -14,9 +14,12 @@ export const DocumentStepper = ({ stages, currentStageNumber }: DocumentStepperP
     return 'pending';
   };
 
+  // Ensure activeStep doesn't exceed stages length
+  const activeStep = Math.min(currentStageNumber - 1, stages.length - 1);
+
   return (
     <Box sx={{ width: '100%', mt: 3 }}>
-      <Stepper activeStep={currentStageNumber - 1} alternativeLabel>
+      <Stepper activeStep={activeStep} alternativeLabel>
         {stages.map((stage) => {
           const status = getStepStatus(stage);
           return (
