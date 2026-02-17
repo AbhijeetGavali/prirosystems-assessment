@@ -22,6 +22,10 @@ import {
   IconButton,
   Autocomplete,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon, Visibility as ViewIcon } from '@mui/icons-material';
 import { useGetDocumentsQuery, useCreateDocumentMutation } from '../store/api/documentApi';
@@ -37,6 +41,7 @@ export const DocumentsPage = () => {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<DocumentStatus | ''>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   
   const { data, isLoading } = useGetDocumentsQuery({ page, limit: 10, status: status || undefined });
   const { data: approversData } = useGetApproversQuery();
@@ -49,10 +54,39 @@ export const DocumentsPage = () => {
     approverIds: [] as string[],
   });
 
+  const [errors, setErrors] = useState({
+    approverIds: false,
+  });
+
+  const isFormDirty = () => {
+    return formData.title || formData.description || formData.fileLink || formData.approverIds.length > 0;
+  };
+
+  const handleDrawerClose = () => {
+    if (isFormDirty()) {
+      setConfirmClose(true);
+    } else {
+      resetForm();
+      setDrawerOpen(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({ title: '', description: '', fileLink: '', approverIds: [] });
+    setErrors({ approverIds: false });
+  };
+
+  const handleConfirmClose = () => {
+    setConfirmClose(false);
+    resetForm();
+    setDrawerOpen(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.approverIds.length === 0) {
+      setErrors({ approverIds: true });
       toast.error('Please select at least one approver');
       return;
     }
@@ -60,8 +94,8 @@ export const DocumentsPage = () => {
     try {
       await createDocument(formData).unwrap();
       toast.success('Document created successfully!');
+      resetForm();
       setDrawerOpen(false);
-      setFormData({ title: '', description: '', fileLink: '', approverIds: [] });
     } catch (err: any) {
       toast.error(getErrorMessage(err));
     }
@@ -141,8 +175,10 @@ export const DocumentsPage = () => {
                     <Chip label={doc.status} color={getStatusColor(doc.status)} size="small" />
                   </TableCell>
                   <TableCell>
-                    {doc.status === DocumentStatus.APPROVED || doc.status === DocumentStatus.REJECTED
+                    {doc.status === DocumentStatus.APPROVED
                       ? `${doc.stages.length}/${doc.stages.length}`
+                      : doc.status === DocumentStatus.REJECTED
+                      ? `${doc.currentStageNumber}/${doc.stages.length} (Rejected)`
                       : `${Math.min(doc.currentStageNumber, doc.stages.length)}/${doc.stages.length}`}
                   </TableCell>
                   <TableCell>{new Date(doc.createdAt).toLocaleDateString()}</TableCell>
@@ -162,11 +198,11 @@ export const DocumentsPage = () => {
         <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} color="primary" />
       </Box>
 
-      <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+      <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerClose}>
         <Box sx={{ width: 400, p: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" fontWeight={600}>Create Document</Typography>
-            <IconButton onClick={() => setDrawerOpen(false)}>
+            <IconButton onClick={handleDrawerClose}>
               <CloseIcon />
             </IconButton>
           </Box>
@@ -202,13 +238,18 @@ export const DocumentsPage = () => {
                 options={approvers}
                 getOptionLabel={(option) => `${option.name} (${option.email})`}
                 value={approvers.filter((a) => formData.approverIds.includes(a.id))}
-                onChange={(_, newValue) => setFormData({ ...formData, approverIds: newValue.map((v) => v.id) })}
+                onChange={(_, newValue) => {
+                  setFormData({ ...formData, approverIds: newValue.map((v) => v.id) });
+                  if (newValue.length > 0) {
+                    setErrors({ ...errors, approverIds: false });
+                  }
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Approvers (in order)"
-                    required={formData.approverIds.length === 0}
-                    error={formData.approverIds.length === 0}
+                    error={errors.approverIds}
+                    helperText={errors.approverIds ? 'At least one approver is required' : ''}
                   />
                 )}
               />
@@ -219,6 +260,32 @@ export const DocumentsPage = () => {
           </form>
         </Box>
       </Drawer>
+
+      <Dialog
+        open={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            minWidth: 400,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Unsaved Changes</DialogTitle>
+        <DialogContent>
+          <Typography>
+            You have unsaved changes. Are you sure you want to close? All data will be lost.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setConfirmClose(false)} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmClose} variant="contained" color="error">
+            Discard
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

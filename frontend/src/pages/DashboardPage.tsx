@@ -4,7 +4,12 @@ import { useGetDashboardQuery, useGetPendingDocumentsQuery } from '../store/api/
 import { useAppSelector } from '../hooks/redux';
 import { UserRole } from '../types';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const STATUS_COLORS: Record<string, string> = {
+  'Pending': '#FFA726',      // Orange
+  'InProgress': '#42A5F5',   // Blue
+  'Approved': '#66BB6A',     // Green
+  'Rejected': '#EF5350',     // Red
+};
 
 export const DashboardPage = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -99,8 +104,8 @@ export const DashboardPage = () => {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {chartData?.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {chartData?.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || '#8884d8'} />
                   ))}
                 </Pie>
                 <Tooltip />

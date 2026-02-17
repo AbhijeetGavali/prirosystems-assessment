@@ -1,21 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { ApiResponse, AuthResponse, UserRole } from "../../types";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { ApiResponse, AuthResponse, UserRole } from '../../types';
+import { baseQueryWithReauth } from './baseQuery';
 
 export const authApi = createApi({
-  reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  reducerPath: 'authApi',
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     register: builder.mutation<
       ApiResponse<AuthResponse>,

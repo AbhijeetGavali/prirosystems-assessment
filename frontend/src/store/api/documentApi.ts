@@ -1,28 +1,17 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from '@reduxjs/toolkit/query/react';
 import {
   ApiResponse,
   Document,
   PaginatedResponse,
   DashboardStats,
   DocumentStatus,
-} from "../../types";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+} from '../../types';
+import { baseQueryWithReauth } from './baseQuery';
 
 export const documentApi = createApi({
-  reducerPath: "documentApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["Document", "Dashboard"],
+  reducerPath: 'documentApi',
+  baseQuery: baseQueryWithReauth,
+  tagTypes: ['Document', 'Dashboard'],
   endpoints: (builder) => ({
     createDocument: builder.mutation<
       ApiResponse<Document>,

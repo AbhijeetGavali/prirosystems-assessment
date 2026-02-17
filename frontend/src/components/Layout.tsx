@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
@@ -16,7 +16,7 @@ import {
   Avatar,
   Menu,
   MenuItem,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -24,10 +24,13 @@ import {
   PendingActions as PendingIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
-} from "@mui/icons-material";
-import { useAppSelector, useAppDispatch } from "../hooks/redux";
-import { logout } from "../store/slices/authSlice";
-import { UserRole } from "../types";
+} from '@mui/icons-material';
+import { useAppSelector, useAppDispatch } from '../hooks/redux';
+import { logout } from '../store/slices/authSlice';
+import { authApi } from '../store/api/authApi';
+import { documentApi } from '../store/api/documentApi';
+import { userApi } from '../store/api/userApi';
+import { UserRole } from '../types';
 
 const drawerWidth = 240;
 
@@ -42,8 +45,13 @@ export const Layout = () => {
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
   const handleLogout = () => {
+    // Reset all API caches
+    dispatch(authApi.util.resetApiState());
+    dispatch(documentApi.util.resetApiState());
+    dispatch(userApi.util.resetApiState());
+    // Logout
     dispatch(logout());
-    navigate("/login");
+    navigate('/login');
   };
 
   const menuItems = [
