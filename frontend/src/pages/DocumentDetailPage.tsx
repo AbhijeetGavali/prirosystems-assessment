@@ -187,7 +187,11 @@ export const DocumentDetailPage = () => {
               <TableBody>
                 {document.auditTrail.map((entry, index) => (
                   <TableRow key={index}>
-                    <TableCell>{entry.actorId.name}</TableCell>
+                    <TableCell>
+                      {typeof entry.actorId === 'object' && entry.actorId?.name 
+                        ? `${entry.actorId.name} (${entry.actorId.email})`
+                        : 'Unknown User'}
+                    </TableCell>
                     <TableCell>{entry.action}</TableCell>
                     <TableCell>{entry.details}</TableCell>
                     <TableCell>{new Date(entry.timestamp).toLocaleString()}</TableCell>

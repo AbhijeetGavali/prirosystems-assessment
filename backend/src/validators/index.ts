@@ -21,7 +21,13 @@ export const createDocumentSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   fileLink: z.string().url('Invalid file link URL'),
-  approverIds: z.array(z.string()).min(1, 'At least one approver is required'),
+  approverIds: z
+    .array(z.string())
+    .min(1, 'At least one approver is required')
+    .max(10, 'Maximum 10 approvers allowed')
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: 'Duplicate approvers are not allowed',
+    }),
 });
 
 export const approveRejectSchema = z.object({

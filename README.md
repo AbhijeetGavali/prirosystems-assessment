@@ -50,6 +50,7 @@ docker exec -it workflow_backend npm run seed
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8080/api
+- API Documentation: http://localhost:8080/api-docs
 - MongoDB: mongodb://localhost:27017
 
 ### Local Development
@@ -229,11 +230,15 @@ Authorization: Bearer {access_token}
 
 1. **JWT Authentication:** Access tokens (15min) + Refresh tokens (7 days)
 2. **Password Hashing:** Bcrypt with salt rounds
-3. **Input Validation:** Zod schemas for all API inputs
+3. **Input Validation:** Zod schemas for all API inputs with enhanced validation:
+   - URL validation for file links
+   - Duplicate approver detection
+   - Maximum 10 approvers per document
 4. **Rate Limiting:** 100 requests per 15 minutes per IP
 5. **Helmet:** Security headers
 6. **CORS:** Configured for frontend origin
 7. **Atomic Operations:** MongoDB atomic operators prevent race conditions
+8. **Structured Logging:** Winston logger for production monitoring
 
 ## 🎯 Core Features
 
@@ -396,6 +401,9 @@ npm run dev      # Start development server
 npm run build    # Build TypeScript
 npm start        # Start production server
 npm run seed     # Seed database
+npm test         # Run tests
+npm run test:watch    # Run tests in watch mode
+npm run test:coverage # Run tests with coverage
 ```
 
 ### Frontend Scripts

@@ -40,6 +40,7 @@ export interface AuditTrail {
   actorId: {
     _id: string;
     name: string;
+    email: string;
   };
   action: string;
   timestamp: string;

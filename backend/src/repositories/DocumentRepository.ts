@@ -28,7 +28,8 @@ export class DocumentRepository {
   async findById(id: Types.ObjectId): Promise<IDocument | null> {
     return await Document.findById(id)
       .populate("submitterId", "name email")
-      .populate("stages.approverId", "name email");
+      .populate("stages.approverId", "name email")
+      .populate("auditTrail.actorId", "name email");
   }
 
   async findByIdLean(id: Types.ObjectId): Promise<IDocument | null> {
@@ -96,7 +97,8 @@ export class DocumentRepository {
       { new: true },
     )
       .populate("submitterId", "name email")
-      .populate("stages.approverId", "name email");
+      .populate("stages.approverId", "name email")
+      .populate("auditTrail.actorId", "name email");
   }
 
   async atomicReject(
@@ -128,7 +130,8 @@ export class DocumentRepository {
       { new: true },
     )
       .populate("submitterId", "name email")
-      .populate("stages.approverId", "name email");
+      .populate("stages.approverId", "name email")
+      .populate("auditTrail.actorId", "name email");
   }
 
   async markAsCompleted(docId: Types.ObjectId): Promise<IDocument | null> {
@@ -143,7 +146,8 @@ export class DocumentRepository {
       { new: true },
     )
       .populate("submitterId", "name email")
-      .populate("stages.approverId", "name email");
+      .populate("stages.approverId", "name email")
+      .populate("auditTrail.actorId", "name email");
   }
 
   async getDashboardStats(): Promise<{
