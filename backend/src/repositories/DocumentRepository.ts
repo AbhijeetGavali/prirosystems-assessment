@@ -151,10 +151,16 @@ export class DocumentRepository {
   }
 
   async getDashboardStats(): Promise<{
+    totalDocuments: number;
+    approvedCount: number;
+    rejectedCount: number;
     avgApprovalTime: number;
     statusDistribution: Array<{ _id: string; count: number }>;
   }> {
-    const [avgResult, statusDistribution] = await Promise.all([
+    const [totalCount, approvedCount, rejectedCount, avgResult, statusDistribution] = await Promise.all([
+      Document.countDocuments(),
+      Document.countDocuments({ status: DocumentStatus.APPROVED }),
+      Document.countDocuments({ status: DocumentStatus.REJECTED }),
       Document.aggregate([
         {
           $match: {
@@ -185,6 +191,9 @@ export class DocumentRepository {
     ]);
 
     return {
+      totalDocuments: totalCount,
+      approvedCount,
+      rejectedCount,
       avgApprovalTime: avgResult[0]?.avgApprovalTime || 0,
       statusDistribution,
     };

@@ -174,12 +174,18 @@ export class DocumentService {
   }
 
   async getDashboardStats(): Promise<{
+    totalDocuments: number;
+    approvedCount: number;
+    rejectedCount: number;
     avgApprovalTimeMs: number;
     avgApprovalTimeHours: number;
     statusDistribution: Array<{ status: string; count: number }>;
   }> {
     const stats = await this.docRepo.getDashboardStats();
     return {
+      totalDocuments: stats.totalDocuments,
+      approvedCount: stats.approvedCount,
+      rejectedCount: stats.rejectedCount,
       avgApprovalTimeMs: stats.avgApprovalTime,
       avgApprovalTimeHours: stats.avgApprovalTime / (1000 * 60 * 60),
       statusDistribution: stats.statusDistribution.map((s) => ({

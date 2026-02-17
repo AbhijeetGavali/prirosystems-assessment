@@ -38,15 +38,58 @@ export const DashboardPage = () => {
         </Typography>
 
         <Grid container spacing={3}>
-          {/* Average Approval Time */}
-          <Grid item xs={12} md={6}>
+          {/* Total Documents */}
+          <Grid item xs={12} md={6} lg={3}>
             <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
               <Typography variant="h6" gutterBottom>
-                Average Approval Time
+                Total Documents
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                 <Typography variant="h3" color="primary">
-                  {stats?.avgApprovalTimeHours.toFixed(2) || 0} hrs
+                  {stats?.totalDocuments || 0}
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Approved Count */}
+          <Grid item xs={12} md={6} lg={3}>
+            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
+              <Typography variant="h6" gutterBottom>
+                Approved
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                <Typography variant="h3" color="success.main">
+                  {stats?.approvedCount || 0}
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Rejected Count */}
+          <Grid item xs={12} md={6} lg={3}>
+            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
+              <Typography variant="h6" gutterBottom>
+                Rejected
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                <Typography variant="h3" color="error.main">
+                  {stats?.rejectedCount || 0}
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Average Approval Time */}
+          <Grid item xs={12} md={6} lg={3}>
+            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: 200 }}>
+              <Typography variant="h6" gutterBottom>
+                Avg Approval Time
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                <Typography variant="h3" color="info.main">
+                  {stats?.avgApprovalTimeHours.toFixed(1) || 0}
+                  <Typography component="span" variant="h6"> hrs</Typography>
                 </Typography>
               </Box>
             </Paper>
@@ -69,7 +112,7 @@ export const DashboardPage = () => {
           )}
 
           {/* Status Distribution Chart */}
-          <Grid item xs={12}>
+          <Grid item xs={12} md={user?.role === UserRole.APPROVER ? 6 : 12}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Document Status Distribution
